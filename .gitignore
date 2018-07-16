@@ -1,0 +1,13 @@
+#ignore the files that Racket and DrRacket create when compiling:
+
+*.zo
+
+*.dep
+
+*.rkt~
+
+
+#Ignore my scratchpaper files
+
+/quasiquote_scratch.rktls
+/chicken_parkinglot.rkt
