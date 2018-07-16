@@ -1,10 +1,10 @@
-#ignore the files that Racket and DrRacket create when compiling:
+#ignore the automatically-generated files that Racket and DrRacket create when running and compiling:
 
 *.zo
-
 *.dep
-
 *.rkt~
+*.rktls~
+*.rkt#1#
 
 
 #Ignore my scratchpaper files
