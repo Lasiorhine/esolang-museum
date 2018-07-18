@@ -9,16 +9,10 @@
      PARSE-TREE))
 (provide (rename-out [chicken-module-begin #%module-begin]))
 
-;; RESERVOIR OF INDIVIDUAL INSTRUCTION MACROS THAT NEED TO BE IMPLEMENTED
-
-(define-macro (chx-eight FLY-ARG ...)
-  #'(void FLY-ARG ...))
-;  #'fly)
-(provide chx-eight)
-
 ;; CORE ENGINES THAT DRIVE THE PROGRAM 
 
-#| Mechanism for using commands to manipulate the stack and pointers.
+#| Mechaninsm for Using Commands to Manipulate the Stack and Pointers:
+
 Commands come in through the list-object chicken-funcs.
 Stack-apsl means 'stack array and pointers list'.
 In the for/fold loop, current-stack-aspl is the accumulator, which recieves its value through stack-apsl.
@@ -33,17 +27,35 @@ The Apply statement allows us to give whatever instruction is currently being re
     (apply chicken-func current-stack-apsl)))
  ;   (printf "Coming in through chicken-func: ~a.  Coming in as args: ~a" chicken-func current-stack-apsl)))
 
-#| Chx-program now does more than just act as a vessel.  Now it:
+
+
+#|  Chx Program Macro: 
+Chx-program now does more than just act as a vessel.  Now it:
  (1) Creates the initial stack and pointers;
  (2) Initiate the process of using fold-funcs to manipulate the values of the stack and pointers.
  (2a)  The bit with giving fold-funcs, etc, to void is apparently "like piping to dev/null in a unixy context." (But right now, we're not doing that, because we want to see the state of the stack and pointers at the end of each program.)  
 |#
 
+;; Version 1:  Original; works; no command hash
+#|
 (define-macro (chx-program PROGRAM-ARG ...)
   #'(begin
-      (define first-stack-apsl (list (make-vector 15 null) 0 0))
+      (define first-stack-apsl (list (make-vector 35 null) 0 0))
       (fold-funcs first-stack-apsl (list PROGRAM-ARG ...))))
 (provide chx-program)
+|#
+
+;;  Version 2: Working toward having a command hash
+(define-macro (chx-program PROGRAM-ARG ...)
+  #'(begin
+      (define first-stack-apsl (list (make-vector 35 null) 0 0))
+      (fold-funcs first-stack-apsl (list PROGRAM-ARG ...))))
+(provide chx-program)
+
+;INSTRUCTION WRAPPER
+(define-macro (chx-instruction INSTRUCTION-ARG ...)
+  #'(first (list INSTRUCTION-ARG ...)))
+(provide chx-instruction)
 
 ;; Helpers for Stack and Pointer Manipulation
 
@@ -103,10 +115,7 @@ increases in length, or you can give it a negative interval to move it down.
 ;;;; MACROS FOR CHICKEN COMMANDS
 ;;( Note:  all-caps means IT WORKS.)
 
-;GENERAL INSTRUCTIONS
-(define-macro (chx-instruction INSTRUCTION-ARG ...)
-  #'(first (list INSTRUCTION-ARG ...)))
-(provide chx-instruction)
+
 
 ;ZERO CHICKENS
 
@@ -258,6 +267,13 @@ increases in length, or you can give it a negative interval to move it down.
 (provide chx-seven)
 
 ;eight chickens
+
+(define-macro (fly stack ptr1 ptr2) (void))
+
+(define-macro (chx-eight FLY-ARG ...)
+  #'(void FLY-ARG ...))
+;  #'fly)
+(provide chx-eight)
 
 ;NINE CHICKENS
 (define (bbq stack ptr1 ptr2)
