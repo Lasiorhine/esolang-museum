@@ -11,3 +11,5 @@
 
 /quasiquote_scratch.rktls
 /chicken_parkinglot.rkt
+/experimental-expander.rkt
+/experimental-expander-test.rkt
