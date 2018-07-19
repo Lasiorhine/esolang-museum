@@ -9,6 +9,22 @@
      PARSE-TREE))
 (provide (rename-out [chicken-module-begin #%module-begin]))
 
+#|
+;; GLOBAL COUNTERS:
+;;; Use instr-1no or instr-2no in a function to call these.  Increments itself every time it's called. The first runs at runtime, and the second runs at compile-time.
+
+(define (make-counter1 (count 0) (incr 1))
+  (lambda () (set! count (+ count incr))
+    count))
+(define instr-1no (make-counter1))
+
+(define-for-syntax (make-counter2 (count 0) (incr 1))
+  (lambda () (set! count (+ count incr))
+    count))
+(define-for-syntax instr-2no (make-counter2))
+|#
+
+
 ;; CORE ENGINES THAT DRIVE THE PROGRAM 
 
 #| Mechaninsm for Using Commands to Manipulate the Stack and Pointers:
@@ -20,12 +36,41 @@ The ([chicken-func (in-list chicken-funcs)]) part is the "for clause," which pul
 The Apply statement allows us to give whatever instruction is currently being represented by chicken-func its arguments as a single list-object, regardless of its arity (arity meaning the number of arguments its designed to take).
 |#
 
+;IN-PROGRESS: Option 1: 
+(define (run-funcs stack-apsl chicken-funcs inst-numb)
+  (until (= inst-numb (-1 (length chicken-funcs)))
+         (define current-chicfunc (list-ref chicken-funcs inst-numb))
+         (printf "Current-chicfunc: ~a current inst-numb: ~a current stack-apsl ~a" current-chicfunc inst-numb stack-apsl)
+         (cond [(equal? (length (list current-chicfunc )) 9) (apply current-chicfunc inst-numb) ]
+               [else (apply current-chicfunc stack-apsl)])))
+
+;IN-PROGRESS: Option 2: 
+(define (fold-funcs stack-apsl chicken-funcs start-numb)
+  (define counter-adjustment 0)
+  (for/fold ([current-stack-apsl stack-apsl])
+            ([instruction-counter (in-range start-numb 5000)])
+    (begin
+      (define current-chicfunc (list-ref chicken-funcs (+ instruction-counter counter-adjustment)))
+      (printf "Current-chicfunc: ~a current instruction-counter: ~a \n current counter adjustment: ~a current stack-apsl ~a \n" current-chicfunc instruction-counter counter-adjustment current-stack-apsl)
+      (cond [(procedure-closure-contents-eq?	current-chicfunc fly)
+             (printf "\n we identified a 'fly' instruction.\n counter adjustment currently ~a " counter-adjustment)
+             (set! counter-adjustment (- counter-adjustment 2))
+             (printf "counter-adjustment now ~a " counter-adjustment)]) ;figure out how to read the stack and mess with the counter if this works
+      (apply current-chicfunc current-stack-apsl))))
+                     
+#|
+;ORIGINAL: 
 (define (fold-funcs stack-apsl chicken-funcs)
   (for/fold ([current-stack-apsl stack-apsl])
             ([chicken-func (in-list chicken-funcs)]
              #:unless (equal? chicken-func "\n"))
     (apply chicken-func current-stack-apsl)))
  ;   (printf "Coming in through chicken-func: ~a.  Coming in as args: ~a" chicken-func current-stack-apsl)))
+
+|#
+
+
+
 
 
 
@@ -48,8 +93,8 @@ Chx-program now does more than just act as a vessel.  Now it:
 ;;  Version 2: Working toward having a command hash
 (define-macro (chx-program PROGRAM-ARG ...)
   #'(begin
-      (define first-stack-apsl (list (make-vector 35 null) 0 0))
-      (fold-funcs first-stack-apsl (list PROGRAM-ARG ...))))
+      (define first-stack-apsl (list (make-vector 10 null) 0 0))
+      (fold-funcs first-stack-apsl (list PROGRAM-ARG ...) 1)))
 (provide chx-program)
 
 ;INSTRUCTION WRAPPER
@@ -268,11 +313,16 @@ increases in length, or you can give it a negative interval to move it down.
 
 ;eight chickens
 
-(define-macro (fly stack ptr1 ptr2) (void))
+(define (fly stack ptr1 ptr2)
+  (define interimptr1 (move-pointer ptr1 -2))
+  (define updated-stack (set-stack-value! stack interimptr1 null))
+  (define newptr1 (move-pointer ptr1 -1))
+  (define newptr2 (move-pointer ptr2 -1))
+  (list updated-stack newptr1 newptr2))
 
 (define-macro (chx-eight FLY-ARG ...)
-  #'(void FLY-ARG ...))
-;  #'fly)
+ ; #'(void FLY-ARG ...))
+  #'fly)
 (provide chx-eight)
 
 ;NINE CHICKENS
