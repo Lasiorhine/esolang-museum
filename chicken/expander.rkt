@@ -35,6 +35,7 @@ The Apply statement allows us to give whatever instruction is currently being re
   (for/fold ([current-stack-apsl stack-apsl])
             ([instruction-counter (in-range start-numb 5000)])
     (begin
+      (cond [( >= (+ instruction-counter counter-adjustment) (length chicken-funcs)) (apply axe current-stack-apsl)])
       (define current-chicfunc (list-ref chicken-funcs (+ instruction-counter counter-adjustment)))
       (printf "Current-chicfunc: ~a current instruction-counter: ~a \n current counter adjustment: ~a current stack-apsl ~a \n" current-chicfunc instruction-counter counter-adjustment current-stack-apsl)
       ; The GIGANTIC, nested conditional below is all there to make GOTO instructions work.
@@ -56,7 +57,8 @@ The Apply statement allows us to give whatever instruction is currently being re
                           (set! counter-adjustment (- (+ counter-adjustment offset-to-apply) 1)))))
                     (printf "\n The counter-adjustment has been changed to ~a " counter-adjustment)]
                    [else (printf "\n The 'fly' instruction's condition is falsy. It will not be executed. \n")])])
-      (apply current-chicfunc current-stack-apsl))))            
+      (apply current-chicfunc current-stack-apsl)))
+  (axe))            
 #|
 ;ORIGINAL: 
 (define (fold-funcs stack-apsl chicken-funcs)
@@ -79,7 +81,7 @@ Chx-program now does more than just act as a vessel.  Now it:
 (define-macro (chx-program PROGRAM-ARG ...)
   #'(begin
       (define first-stack-apsl (list (make-vector 35 null) 0 0))
-      (fold-funcs first-stack-apsl (list PROGRAM-ARG ...) 1)))
+      (fold-funcs first-stack-apsl (list PROGRAM-ARG ...)  1)))
 (provide chx-program)
 
 ;INSTRUCTION WRAPPER
