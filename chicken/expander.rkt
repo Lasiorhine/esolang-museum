@@ -1,6 +1,7 @@
 #lang br/quicklang
 (require (for-syntax syntax/parse))
 (require racket/list)
+(require racket/bool)
 
 ;; MODULE BEGIN-- necessary, core macro for converting a parse tree to syntax
 
@@ -8,22 +9,6 @@
   #'(#%module-begin
      PARSE-TREE))
 (provide (rename-out [chicken-module-begin #%module-begin]))
-
-#|
-;; GLOBAL COUNTERS:
-;;; Use instr-1no or instr-2no in a function to call these.  Increments itself every time it's called. The first runs at runtime, and the second runs at compile-time.
-
-(define (make-counter1 (count 0) (incr 1))
-  (lambda () (set! count (+ count incr))
-    count))
-(define instr-1no (make-counter1))
-
-(define-for-syntax (make-counter2 (count 0) (incr 1))
-  (lambda () (set! count (+ count incr))
-    count))
-(define-for-syntax instr-2no (make-counter2))
-|#
-
 
 ;; CORE ENGINES THAT DRIVE THE PROGRAM 
 
@@ -52,12 +37,26 @@ The Apply statement allows us to give whatever instruction is currently being re
     (begin
       (define current-chicfunc (list-ref chicken-funcs (+ instruction-counter counter-adjustment)))
       (printf "Current-chicfunc: ~a current instruction-counter: ~a \n current counter adjustment: ~a current stack-apsl ~a \n" current-chicfunc instruction-counter counter-adjustment current-stack-apsl)
-      (cond [(procedure-closure-contents-eq?	current-chicfunc fly)
-             (printf "\n we identified a 'fly' instruction.\n counter adjustment currently ~a " counter-adjustment)
-             (set! counter-adjustment (- counter-adjustment 2))
-             (printf "counter-adjustment now ~a " counter-adjustment)]) ;figure out how to read the stack and mess with the counter if this works
-      (apply current-chicfunc current-stack-apsl))))
-                     
+      ; The GIGANTIC, nested conditional below is all there to make GOTO instructions work.
+      ; The first step checks to see if the current instruction is a GOTO (aka, a 'fly.")
+      (cond [(procedure-closure-contents-eq? current-chicfunc fly)
+             (printf "\n we identified a 'fly' instruction.\n The counter adjustment currently ~a \n" counter-adjustment)
+             ; The next conditional chceks to see if it should execture the GOTO, by seeing if the
+             ; 2nd-to-last instruction in the stack would be considered truthy in Javascript.
+             (cond [(nor
+                     (eqv? 0 (vector-ref (first current-stack-apsl) (- (second current-stack-apsl) 2)))
+                     (false? (vector-ref (first current-stack-apsl) (- (second current-stack-apsl) 2)))
+                     (empty? (vector-ref (first current-stack-apsl) (- (second current-stack-apsl) 2)))
+                     )
+                    (printf "\n The 'fly' instruction's condition is truthy. \n")
+                    ; Now, we get the offset to the instruction counter and set the instruction-counter accordingly. 
+                    (let ([ptr-to-offset (- (second current-stack-apsl) 1)])
+                      (let ([stack-now (first current-stack-apsl)])
+                        (let ([offset-to-apply (vector-ref stack-now ptr-to-offset)])
+                          (set! counter-adjustment (- (+ counter-adjustment offset-to-apply) 1)))))
+                    (printf "\n The counter-adjustment has been changed to ~a " counter-adjustment)]
+                   [else (printf "\n The 'fly' instruction's condition is falsy. It will not be executed. \n")])])
+      (apply current-chicfunc current-stack-apsl))))            
 #|
 ;ORIGINAL: 
 (define (fold-funcs stack-apsl chicken-funcs)
@@ -69,31 +68,17 @@ The Apply statement allows us to give whatever instruction is currently being re
 
 |#
 
-
-
-
-
-
 #|  Chx Program Macro: 
 Chx-program now does more than just act as a vessel.  Now it:
  (1) Creates the initial stack and pointers;
  (2) Initiate the process of using fold-funcs to manipulate the values of the stack and pointers.
- (2a)  The bit with giving fold-funcs, etc, to void is apparently "like piping to dev/null in a unixy context." (But right now, we're not doing that, because we want to see the state of the stack and pointers at the end of each program.)  
+ (2a)  The bit with giving fold-funcs, etc, to void is apparently "like piping to dev/null in a unixy context." (But right now, we're not doing that, because we want to see the state of the stack and pointers at the end of each program.)
+ (2b) We pass fold-funcs a one along with the stack and pointers and the program-instruction list to tell the program which instruction to start with -- thus allowing it to ignore the initial \n.
 |#
 
-;; Version 1:  Original; works; no command hash
-#|
 (define-macro (chx-program PROGRAM-ARG ...)
   #'(begin
       (define first-stack-apsl (list (make-vector 35 null) 0 0))
-      (fold-funcs first-stack-apsl (list PROGRAM-ARG ...))))
-(provide chx-program)
-|#
-
-;;  Version 2: Working toward having a command hash
-(define-macro (chx-program PROGRAM-ARG ...)
-  #'(begin
-      (define first-stack-apsl (list (make-vector 10 null) 0 0))
       (fold-funcs first-stack-apsl (list PROGRAM-ARG ...) 1)))
 (provide chx-program)
 
@@ -272,8 +257,10 @@ increases in length, or you can give it a negative interval to move it down.
   (define interimptr1 (move-pointer ptr1 -1))
   (define finderptr (target-stack-value stack interimptr1))
   (define foundval (target-stack-value stack finderptr))
-  (define updated-stack (set-stack-value! stack interimptr1 foundval))
-  (list updated-stack ptr1 ptr2))
+  (define updated-stack (set-stack-value! stack ptr1 foundval))
+  (define newptr1 (move-pointer ptr1 1))
+  (define newptr2 (move-pointer ptr2 1))
+  (list updated-stack newptr1 newptr2))
 
 (define-macro (chx-doublewide-zero PICK-STACK-ARG ...)
 ;  #'(void PICK-STACK-ARG ...))
@@ -304,7 +291,7 @@ increases in length, or you can give it a negative interval to move it down.
   (define updated-stack (set-stack-value! stack saverptr saveval))
   (define re-updated-stack (set-stack-value! updated-stack interimptr2 null))
   (define rere-updated-stack (set-stack-value! re-updated-stack interimptr1 null))
-  (list rere-updated-stack interimptr2 interimptr2))
+  (list updated-stack ptr1 ptr2))
 
 (define-macro (chx-seven PECK-ARG ...)
  ; #'(void PECK-ARG ...))
@@ -312,13 +299,12 @@ increases in length, or you can give it a negative interval to move it down.
 (provide chx-seven)
 
 ;eight chickens
+#|(In terms of its affect on the stack, 'fly'really is just a pass-through.  All the actual GOTO mechanics are executed in the for/fold loop.)
+|#
 
 (define (fly stack ptr1 ptr2)
-  (define interimptr1 (move-pointer ptr1 -2))
-  (define updated-stack (set-stack-value! stack interimptr1 null))
-  (define newptr1 (move-pointer ptr1 -1))
-  (define newptr2 (move-pointer ptr2 -1))
-  (list updated-stack newptr1 newptr2))
+  (void "Nothing happens to the stack in 'fly'")
+  (list stack ptr1 ptr2))
 
 (define-macro (chx-eight FLY-ARG ...)
  ; #'(void FLY-ARG ...))

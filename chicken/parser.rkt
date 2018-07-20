@@ -1,6 +1,6 @@
 #lang brag
 
-chx-program         :  RETURN{,1} chx-instruction*
+chx-program         :  RETURN{1} chx-instruction*
 chx-instruction     :  chx-numerical | chx-doublewide-one | chx-doublewide-zero | chx-nine |
                        chx-eight | chx-seven | chx-five | chx-four | chx-three | chx-two | chx-one | chx-zero
 chx-numerical       :  CHICKEN{10,} RETURN{1}
