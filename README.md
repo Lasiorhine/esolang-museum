@@ -73,7 +73,7 @@ C. Retpetition (overlaps with 5, above).
 
 (In these actions, the cell under the pointer is the first term, and the cell immediately below it is the second term. These two terms will be left in place, and the result-value will be pushed to the stack. )
 
-`damagaging` - multiplication
+`damaging` - multiplication
 `tampering` - addition
 `impeding` - subtraction
 
