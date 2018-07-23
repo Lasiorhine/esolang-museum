@@ -22,7 +22,7 @@ Crime and Punishment is, primarily, an aesthetic and literary experiment that in
 2.  Incrementation 
 3.  Variable access - Here, stack slots act as variables
 4.  Program statement concatenation (here, a freebie) 
-5.  Primitive recursion
+5.  Primitive recursion - Here, we have a looping construct.
 6.  Selective exectution (i.e., conditionals/while loops)
 
 (Based on the Bohm Jacopini Structured Program Theorem)
@@ -87,13 +87,13 @@ C. Retpetition (overlaps with 5, above).
 
 #### Actions involving multiple stack positions - comparison
 
-`knowingly` - compares the top two values in the stack, and pushes the value "true" to the stack if they are equivalent. (leaves the original values in place)
+`purposefully` - compares the top two values in the stack, and pushes the value "true" to the stack if they are equivalent. (leaves the original values in place)
 
 `recklessly` - compares the top two values in the stack, and pushes the value "false" to the stack if they are equivalent. (leaves the original values in place)
 
 #### Actions involving multiple stack positions - Copying
 
-`grievous` - copy the cell beneath the pointer and push it to the stack 
+`possessing` - copy the cell beneath the pointer and push it to the stack 
 
 #### Looping
 
