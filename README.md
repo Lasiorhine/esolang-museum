@@ -28,7 +28,9 @@ Crime and Punishment is, primarily, an aesthetic and literary experiment that in
 (Based on the Bohm Jacopini Structured Program Theorem)
 
 A. Sequential execution (overlaps with 4, above)
+
 B. Selection (overlaps with 6, above) 
+
 C. Retpetition (overlaps with 5, above). 
 `
 ### Commands:
