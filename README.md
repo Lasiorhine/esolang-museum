@@ -7,11 +7,11 @@
 
 ### What is this, and why is it happening?
 
-The short answer:   Charles said I needed to make my own language, instead of just compiling and tweaking those of others.
+The short answer:   To complete my capstone, Charles said that I needed to make my own esolang, instead of just compiling and tweaking the esolangs of others.
 
-The longer answer:  This language is inspired, in equal measure, by the minimalist stack-manipulation langugages Chicken and Brainf-ck, and by the .Gertrude and Chef, which use language that does not, at first blush, look like computer code to generate computer programs. 
+The longer answer:  This language is inspired, in equal measure, by the minimalist stack-manipulation langugages Chicken and Brainf-ck, and by the .Gertrude and Chef, which use lverbiage that does not, at first blush, look like computer code to generate computations.
 
-Crime and Punishment is, primarily, an experminent with tokenizing and parsing.  The goal is to create a more-or-less Turing complete language that (1) Can be hidden amid legalistic language; and (2) Can be sucessfully and predictably processed despite the presence of a great deal of irrelevant verbiage.  The fun of this (and I do hope it turns out to be fun) is that you should be able to write yourself a fairly plausible-looking criminal statute, and then run it as code.  (Note -- your statute, most likely, will not look especially plausible to an actual, practicing lawyer.  Yours will be a sit-com quality criminal statute.) 
+Crime and Punishment is, primarily, an aesthetic and literary experiment that involves parsing, lexing, and tokenizing.  The goal is to create a more-or-less Turing complete language that (1) Can be hidden amid legalistic language; and (2) Can be sucessfully and predictably processed despite the presence of a great deal of interlarded, irrelevant verbiage.  The fun of this (and I do hope it turns out to be fun) is that you should be able to write yourself a fairly plausible-looking criminal statute, and then run it as code.  (Note -- your statute, most likely, will not look especially plausible to an actual, practicing lawyer.  Yours will be a sit-com quality criminal statute.) 
 
 #### Minimum Basic Requirements for Turing Completeness:
 
