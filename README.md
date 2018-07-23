@@ -119,6 +119,8 @@ Loops are made a number of times equivalent to the integer currently beneath the
 
 * Each crime-and-punishment function will take in the stack and two pointers.  The first pointer will be to a given position within the stack, and the second will track the top of the stack. 
 
+* Because I want to give folks the maximum amount of freedom to make up interstitial legalese, the vast majority of errors that this code generates will simply be caught and ignored. So, for instance, if you make up a loop that ends with "with intent or knowledge" instead of "with knowledge or intent" the program will just ignore your entire looping attempt, instead of throwing a visible error. 
+
 
 
 
