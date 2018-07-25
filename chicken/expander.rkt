@@ -21,6 +21,8 @@ The ([chicken-func (in-list chicken-funcs)]) part is the "for clause," which pul
 The Apply statement allows us to give whatever instruction is currently being represented by chicken-func its arguments as a single list-object, regardless of its arity (arity meaning the number of arguments its designed to take).
 |#
 
+;
+
 ;IN-PROGRESS: Option 1: 
 (define (run-funcs stack-apsl chicken-funcs inst-numb)
   (until (= inst-numb (-1 (length chicken-funcs)))
@@ -35,7 +37,8 @@ The Apply statement allows us to give whatever instruction is currently being re
   (for/fold ([current-stack-apsl stack-apsl])
             ([instruction-counter (in-range start-numb 5000)])
     (begin
-      (cond [( >= (+ instruction-counter counter-adjustment) (length chicken-funcs)) (apply axe current-stack-apsl)])
+;      (cond [(( >= (+ instruction-counter counter-adjustment) (length chicken-funcs))(apply axe current-stack-apsl))])
+;      (cond [(( >= instruction-counter 5000) (apply axe current-stack-apsl))])
       (define current-chicfunc (list-ref chicken-funcs (+ instruction-counter counter-adjustment)))
       (printf "Current-chicfunc: ~a current instruction-counter: ~a \n current counter adjustment: ~a current stack-apsl ~a \n" current-chicfunc instruction-counter counter-adjustment current-stack-apsl)
       ; The GIGANTIC, nested conditional below is all there to make GOTO instructions work.
@@ -94,7 +97,10 @@ Chx-program now does more than just act as a vessel.  Now it:
 #|This is a helper function (named target-stack-value) that uses the baked-in Racket procedure vector-ref to retrieve a value from a stack by pointer value.  Note that the whole stack has to be passed into it.
 |#
 
-(define (target-stack-value arr ptr) (vector-ref arr ptr))
+(define (target-stack-value arr ptr)
+ ; (cond [(< ptr 0) (raise (stack-exceeded))])
+ ; (cond [(>= ptr (length arr)) (raise (stack-exceeded))])
+  (vector-ref arr ptr))
 
 #| This is a second helper function.  It takes in the entire stack and then uses the pointer location to set
  a specified value (val) at a specified location in the stack. Here, teh origianl stack is copied to new-arr
@@ -126,15 +132,20 @@ increases in length, or you can give it a negative interval to move it down.
       [else target-val]))
 
 ; Special exception for terminating the program.
-
 (struct exn:end-chickens exn:fail ()) ; subtype of `exn:fail`
 (define (end-program)
   (raise (exn:end-chickens
           (format "All chickens are now concluded.")
           (current-continuation-marks))))
 
-; Exception for when trying to do math on strings and numbers at once.
+; Special exception for exceeding the stack.
+(struct exn:stack-exceeded exn:fail ()) ; subtype of `exn:fail`
+(define (stack-exceeded)
+  (raise (exn:stack-exceeded
+          (format "The chickens have a finite amount of stack-space to work with and you have gone beyond it. \n This has made the chickens feel inadequate, so they're leaving. Goodbye.")
+          (current-continuation-marks))))
 
+; Exception for when trying to do math on strings and numbers at once.
 (struct exn:mixed-math exn:fail ()) ; subtype of `exn:fail`
 (define (math-mixing operation term1 term2)
   (define stringified1 (stringify term1))
@@ -153,6 +164,9 @@ increases in length, or you can give it a negative interval to move it down.
 
 (define (axe stack ptr1 ptr2)
   (define last-value (target-stack-value stack (- ptr1 1)))
+ ; (define last-value
+ ;   (cond [(<= 0 ptr1 ) (target-stack-value stack 0)]
+ ;         [else (target-stack-value stack (- ptr1 1))]))
   (define printable-last (stringify last-value))
   (define final-statement (format "Your final chicken-reading is: ~v.\n" printable-last))
   (printf final-statement)
