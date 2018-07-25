@@ -7,7 +7,7 @@
 
 ### What is this, and why is it happening?
 
-The short answer:   To complete my capstone, Charles said that I needed to make my own esolang, instead of just compiling and tweaking the esolangs of others.
+The short answer:   To complete my capstone, Charles said that I needed to make my own [esolang](https://esolangs.org/wiki/Main_Page) instead of just compiling and tweaking the esolangs of others.
 
 The longer answer:  This language is inspired, in equal measure, by the minimalist stack-manipulation langugages Chicken and Brainf-ck, and by the .Gertrude and Chef, which use verbiage that does not, at first blush, look like computer code to execute computations.
 
