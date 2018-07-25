@@ -4,9 +4,11 @@
 (define-lex-abbrev digits (:+ (char-set "0123456789")))
 
 (define (make-tokenizer port [path #f])
+  (port-count-lines! port)
+  (lexer-file-path path)
   (define (next-token)
     (define criminalicious-lexer
-      (lexer
+      (lexer-srcloc
        ["($" (token 'OPEN-NUMB lexeme)]
        [".00)" (token 'CLOSE-NUMB lexeme)]
        ["A" (token 'CAP-A lexeme)]

@@ -2,6 +2,7 @@
 (require (for-syntax syntax/parse))
 (require racket/list)
 (require racket/bool)
+(require brag/support)
 
 
 
@@ -11,8 +12,8 @@
 ;; MODULE BEGIN-- necessary, core macro for converting a parse tree to syntax
 (define-macro (criminalicious-module-begin PARSE-TREE)
   #'(#%module-begin
-     'PARSE-TREE))
-;     PARSE-TREE))
+;     'PARSE-TREE))
+     PARSE-TREE))
 (provide (rename-out [criminalicious-module-begin #%module-begin]))
 
 ;; CRIMINALICIOUS CENTRAL ENGINE
@@ -30,7 +31,7 @@
 ;; PROGRAM MACRO
 (define-macro (crim-program PROGRAM-ARG ...)
   #'(begin
-      (define first-ptrs-l (list (make-vector vec-length-const null) 0 0))
+      (define first-stack-ptrs-l (list (make-vector vec-length-const null) 0 0))
       (fold-funcs first-stack-ptrs-l (list PROGRAM-ARG ...))))
 (provide crim-program)
 
@@ -72,6 +73,18 @@
   #'(first (list OP-ARG ...)))
 (provide crim-op)
 
+;LOOP-BRACKET TRASHBINS
+
+;(left)
+(define-macro (crim-l-open LOOP-OPEN-ARG ...)
+   #'(void LOOP-OPEN-ARG ...))
+(provide crim-l-open)
+
+;(right)
+(define-macro (crim-l-close LOOP-CLOSE-ARG ...)
+   #'(void LOOP-CLOSE-ARG ...))
+(provide crim-l-close)
+
 ;CATCH-ALL PASSTHROUGH (Function and Macro pair)
 (define (catch-all stack top-ptr free-ptr)
   (list stack top-ptr free-ptr))
@@ -84,11 +97,18 @@
 
 
 
-; Special exception for terminating the program.
+; Special exception for terminating the program WITH A TAILORED STATEMENT.
 (struct exn:end-crimes exn:fail ()) ; subtype of `exn:fail`
 (define (end-program final-statement)
   (raise (exn:end-crimes
           (format "~v \n Per your request, the criminal justice system is now cancelled." final-statement)
+          (current-continuation-marks))))
+
+; Special exception for terminating the program WITHOUT a tailored statement.
+(struct exn:plain-end-crimes exn:fail ()) ; subtype of `exn:fail`
+(define (plain-end-program)
+  (raise (exn:plain-end-crimes
+          (format "\n Per your request, the criminal justice system is now cancelled.")
           (current-continuation-marks))))
 
 ; Feeder for random, legalistic flavor-text for errors:
@@ -103,7 +123,6 @@
 (struct exn:ops-error exn:fail ()) ; subtype of `exn:fail`
 (define (operation-error error-statement)
   (raise (exn:ops-error
-  ;        (format " ~v \n is a violation of a defendant's due process rights under the eighth amendment. \n See In re Gault, 387 U.S. 1 (1967)." error-statement)
            (format (list-ref error-msg-source (random 0 4)) error-statement)
           (current-continuation-marks))))
 
@@ -377,15 +396,15 @@
 ;COPY-TOP-VAL (command: possessing) (Function and Macro pair)
 ;WORKS
 (define (copy-top-val stack top-ptr free-ptr)
-  (define finder-ptr (- top-ptr 1))
+  (define finder-ptr (move-pointer top-ptr -1))
   (define to-copy (target-stack-value stack finder-ptr))
   (define new-stack (set-stack-value! stack top-ptr to-copy ))
   (define new-top-ptr (move-pointer top-ptr 1))
   (list new-stack new-top-ptr top-ptr))
 
 (define-macro (crim-copy POSSESSING-ARG ...)
-  #'(void POSSESSING-ARG ...))
-; #'copy-top-val
+;  #'(void POSSESSING-ARG ...))
+   #'copy-top-val)
 (provide crim-copy )
 
 ;PRINT-CURRENT-AND-CLOSE (command: intent of the legislature) (Function and Macro Pair)
@@ -429,8 +448,7 @@
 ;WORKS
 (define (print-stack-and-end stack top-ptr free-ptr)
   (stdout-stack stack top-ptr free-ptr)
-  (define final-statement "")
-  (raise (end-program final-statement)))        
+  (raise (plain-end-program)))        
 
 (define-macro (crim-end-stack SSDGM-ARG ...)
 ;  #'(void SSDGM-ARG-ARG ...))
@@ -442,39 +460,47 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;::::STAND-ALONE MACROS
 
 ;CRIM-NUMB: (command ($INT.00)) (Stand-alone macro)
+;WORKS
 (define-macro (crim-numb NUMERICAL-ARG ...)
   #'(lambda (stack top-ptr free-ptr)
-      (let ([target-int (trim ends "($" NUMERICAL-ARG ... ".00)")])
+      (let ([target-int (second (list NUMERICAL-ARG ...))])
         (let ([updated-stack (set-stack-value! stack top-ptr target-int)]
               [new-top-ptr (move-pointer top-ptr 1)])
           (list updated-stack new-top-ptr top-ptr)))))    
 (provide crim-numb)
 
 ;READ-SPECIFIED (command: pursuant to CCR) (Stand-alone macro)
+;WORKS
 (define-macro (crim-read-specified PURSUANT-TO-CCR-ARG ...)
   #'(lambda (stack top-ptr free-ptr)
       (let ([finder-ptr (last (list PURSUANT-TO-CCR-ARG ...))])
-        (let ([target-val (target-stack-value stack finder-ptr)])
-          (let ([updated-stack (set-stack-value! stack top-ptr target-val)]
-                [new-top-ptr (move-pointer top-ptr 1)])
-            (list updated-stack new-top-ptr finder-ptr))))))        
+        (cond [(> finder-ptr (- top-ptr 1))
+               (let ([error-statement "Trying to use an excessively high number as an index"])
+                 (raise (operation-error error-statement)))]
+              [else (let ([target-val (target-stack-value stack finder-ptr)])
+                      (let ([updated-stack (set-stack-value! stack top-ptr target-val)]
+                            [new-top-ptr (move-pointer top-ptr 1)])
+                        (list updated-stack new-top-ptr finder-ptr)))]))))        
 (provide crim-read-specified)
 
 ;WRITE-TO (command: notwithstanding sub-chapter) (Stand-alone macro)
-(define-macro (crim-write-from NOTWITHSTANDING-SUB-CHAPTER-ARG ...)
+(define-macro (crim-write-to NOTWITHSTANDING-SUB-CHAPTER-ARG ...)
   #'(lambda (stack top-ptr free-ptr)
       (let ([writer-ptr (last (list NOTWITHSTANDING-SUB-CHAPTER-ARG ...))])
-        (let ([finder-ptr (move-pointer top-ptr -1)])
-          (let ([val-to-write (target-stack-value stack finder-ptr)])
-            (let ([updated-stack (set-stack-value! stack writer-ptr val-to-write)])
-              (list updated-stack top-ptr free-ptr)))))))        
-(provide crim-read-specified)
+        (cond [(> writer-ptr (- top-ptr 1))
+               (let ([error-statement "Trying to use an excessively high number as an index"])
+                 (raise (operation-error error-statement)))]
+              [else (let ([finder-ptr (move-pointer top-ptr -1)])
+                      (let ([val-to-write (target-stack-value stack finder-ptr)])
+                        (let ([updated-stack (set-stack-value! stack writer-ptr val-to-write)])
+                          (list updated-stack top-ptr free-ptr))))]))))        
+(provide crim-write-to)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;::LOOP:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;::::STAND-ALONE MACRO
 
-#|  
+  
 ;LOOP MACRO
 (define-macro (crim-loop "pursuant to subsection " CRIM-PROGRAM ... "or intent." )
   #'(lambda (stack top-ptr free-ptr )
@@ -482,8 +508,8 @@
                 ([i (in-range 0 iterations)]
                  #:break (zero? (apply current-byte
                                        current-apl)))
-        (fold-funcs current-apl (list OP-OR-LOOP-ARG ...)))))
+        (fold-funcs current-apl (list  ...)))))
 (provide crim-loop)
 
-|#
+
 
