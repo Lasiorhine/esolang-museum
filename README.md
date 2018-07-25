@@ -25,7 +25,7 @@ Criminalicious is, primarily, an aesthetic/literary experiment that involves par
 5.  Primitive recursion - Here, we have a looping construct.
 6.  Selective exectution (i.e., conditionals/while loops)
 
-(Based on the Bohm Jacopini Structured Program Theorem)
+(Based on the Böhm-Jacopini  Structured Program Theorem)
 
 A. Sequential execution (overlaps with 4, above)
 
