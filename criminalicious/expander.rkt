@@ -29,11 +29,21 @@
 (define vec-length-const 10)
 
 ;; PROGRAM MACRO
+#|
+(define-macro (crim-program PROGRAM-ARG ...)
+  #'(let ([first-stack-ptrs-l (list (make-vector vec-length-const null) 0 0)])
+      (fold-funcs first-stack-ptrs-l (list PROGRAM-ARG ...))))
+(provide crim-program)
+|#
+
+
 (define-macro (crim-program PROGRAM-ARG ...)
   #'(begin
       (define first-stack-ptrs-l (list (make-vector vec-length-const null) 0 0))
       (fold-funcs first-stack-ptrs-l (list PROGRAM-ARG ...))))
+;      (void (fold-funcs first-stack-ptrs-l (list PROGRAM-ARG ...)))))
 (provide crim-program)
+
 
 ;;;;;;;;;;;;;;;;;;Misc Helpers for Macros:
 
@@ -73,6 +83,7 @@
   #'(first (list OP-ARG ...)))
 (provide crim-op)
 
+#|
 ;LOOP-BRACKET TRASHBINS
 
 ;(left)
@@ -84,6 +95,8 @@
 (define-macro (crim-l-close LOOP-CLOSE-ARG ...)
    #'(void LOOP-CLOSE-ARG ...))
 (provide crim-l-close)
+
+|#
 
 ;CATCH-ALL PASSTHROUGH (Function and Macro pair)
 (define (catch-all stack top-ptr free-ptr)
@@ -239,8 +252,9 @@
 ;BLANK-CELL (command: upon conviction) (Function and Macro pair)
 ;WORKS
 (define (blank-cell stack top-ptr free-ptr)
-  (define updated-stack (set-stack-value! stack free-ptr null))
-  (list updated-stack top-ptr free-ptr))
+  (define new-top-ptr (move-pointer top-ptr -1))
+  (define updated-stack (set-stack-value! stack new-top-ptr null))
+  (list updated-stack new-top-ptr free-ptr))
 
 (define-macro (crim-blank UPON-CONVICTION-ARG ...)
     ;  #'(void UPON-CONVICTION-ARG ...))
@@ -251,7 +265,8 @@
 ;WORKS
 (define (stdout-cell stack top-ptr free-ptr)
   (define starting-cell-val (target-stack-value stack free-ptr))
-  (printf "The stack's value at the requested index is: ~a" starting-cell-val)
+  (define stringified (stringify starting-cell-val))
+  (printf " ~a" stringified)
   (list stack top-ptr free-ptr))
 
 (define-macro (crim-readout-curr CLASS-A-ARG ...)
@@ -354,9 +369,30 @@
   (list newer-stack upper-ptr lower-ptr))
 
 (define-macro (crim-concat BODILY-HARM-ARG ...)
-  #'(void BODILY-HARM-ARG ...))
-; #'string-concat
+ ; #'(void BODILY-HARM-ARG ...))
+  #'string-concat)
 (provide crim-concat)
+
+;STRING-REVERSE (command: forcible) (Function and Macro pair)
+;WORKS
+(define (string-rev stack top-ptr free-ptr)
+  (define finder-ptr (- top-ptr 1))
+  (define target-string (target-stack-value stack finder-ptr))
+  (cond [(not (string? target-string ))
+         (let ([error-statement "Trying to reverse something that is not a string"])
+           (raise (operation-error error-statement)))])
+  (define reversed-string (list->string (reverse (string->list target-string))))
+  (define new-stack (set-stack-value! stack finder-ptr reversed-string))
+  (list new-stack top-ptr finder-ptr))
+
+(define-macro (crim-reverse FORCIBLE-ARG ...)
+ ; #'(void FORCIBLE-ARG ...))
+  #'string-rev)
+(provide crim-reverse)
+
+
+
+
 
 ;COMPARE-FOR-MATCH (command: purposefully) (Function and Macro pair)
 ;WORKS
@@ -371,8 +407,8 @@
   (list new-stack new-top-ptr top-ptr))
 
 (define-macro (crim-comp-same PURPOSEFULLY-ARG ...)
-  #'(void PURPOSEFULLY-ARG ...))
-; #'compare-for-match
+;  #'(void PURPOSEFULLY-ARG ...))
+ #'compare-for-match)
 (provide crim-comp-same)
 
 ;COMPARE-FOR-DIFF (command: recklessly) (Function and Macro pair)
@@ -389,8 +425,8 @@
   (list new-stack new-top-ptr top-ptr))
 
 (define-macro (crim-comp-diffr RECKLESSLY-ARG ...)
-  #'(void RECKLESSLY-ARG ...))
-; #'compare-for-diff
+;  #'(void RECKLESSLY-ARG ...))
+  #'compare-for-diff)
 (provide crim-comp-diffr)
 
 ;COPY-TOP-VAL (command: possessing) (Function and Macro pair)
@@ -500,16 +536,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;::LOOP:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;::::STAND-ALONE MACRO
 
-  
+
 ;LOOP MACRO
-(define-macro (crim-loop "pursuant to subsection " CRIM-PROGRAM ... "or intent." )
+(define-macro (crim-loop CRIM-LOOP ...)
+  (with-pattern ([(ONE TWO THREE FOUR FIVE CRIM-DIRECTIVES ... SIX SEVEN EIGHT NINE) #'(CRIM-LOOP ...)])               
   #'(lambda (stack top-ptr free-ptr )
-      (for/fold ([current-apl (list arr ptr)])
-                ([i (in-range 0 iterations)]
-                 #:break (zero? (apply current-byte
-                                       current-apl)))
-        (fold-funcs current-apl (list  ...)))))
+      (let ([iters (target-stack-value stack free-ptr)])
+            (cond [(not (number? iters))
+                   (let ([error-statement "Trying to use something other than a number to count iterations"])
+                     (raise (operation-error error-statement)))]
+                  [else
+                   (cond [(negative? iters)
+                          (let ([error-statement "Trying to to execute a negative number of iterations"])
+                            (raise (operation-error error-statement)))]
+                         [else
+                          (for/fold ([current-apsl (list stack top-ptr free-ptr)])
+                                    ([i (in-range 0 iters)])
+                            (fold-funcs current-apsl (list CRIM-DIRECTIVES ...)))])])))))
 (provide crim-loop)
-
-
 

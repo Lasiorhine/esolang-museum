@@ -27,6 +27,7 @@
        ["damaging" (token 'DAMAGING lexeme)]
        ["gross" (token 'GROSS lexeme)]
        ["felony." (token 'FELONY-STOP lexeme)]
+       ["forcible" (token 'FORCIBLE lexeme)]
        ["guilty" (token 'GUILTY lexeme)]
        ["harm" (token 'HARM lexeme)]
        ["impeding" (token 'IMPEDING lexeme)]

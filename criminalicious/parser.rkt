@@ -2,10 +2,8 @@
 
 crim-program         :  crim-directive*
 crim-directive       :  crim-op | crim-loop  | crim-catch-all
-crim-loop            :  crim-l-open crim-program crim-l-close
-crim-l-open          :  MIN-A{1} PERSON{1} IS{1} GUILTY{1} OF{1}
-crim-l-close         :  WITH{1} KNOWLEDGE{1} OR{1} INTENT{1}
-crim-op              :  crim-adv-p | crim-rew-p |crim-incr-one | crim-incr-two | crim-decr-one | crim-decr-two | crim-ascii | crim-blank | crim-readout-curr | crim-readout-stack | crim-numb | crim-read-specified | crim-write-to | crim-multip | crim-add | crim-subtr | crim-concat | crim-comp-same | crim-comp-diffr | crim-copy | crim-end-curr | crim-end-last | crim-end-none | crim-end-stack
+crim-loop            :  CAP-A{1} PERSON{1} IS{1} GUILTY{1} OF{1} crim-directive* WITH{1} KNOWLEDGE{1} OR{1} INTENT{1}
+crim-op              :  crim-adv-p | crim-rew-p |crim-incr-one | crim-incr-two | crim-decr-one | crim-decr-two | crim-ascii | crim-blank | crim-readout-curr | crim-readout-stack | crim-numb | crim-read-specified | crim-write-to | crim-multip | crim-add | crim-subtr | crim-concat | crim-reverse | crim-comp-same | crim-comp-diffr | crim-copy | crim-end-curr | crim-end-last | crim-end-none | crim-end-stack
 crim-adv-p           :  FELONY-STOP{1}
 crim-rew-p           :  MISDEMEANOR-STOP{1}
 crim-incr-two        :  MALICE{1} AFORETHOUGHT{1}
@@ -23,6 +21,7 @@ crim-multip          :  DAMAGING{1}
 crim-add             :  TAMPERING{1}
 crim-subtr           :  IMPEDING{1}
 crim-concat          :  BODILY{1} HARM{1}
+crim-reverse         :  FORCIBLE{1}
 crim-comp-same       :  PURPOSEFULLY{1}
 crim-comp-diffr      :  RECKLESSLY{1}
 crim-copy            :  POSSESSING{1}
