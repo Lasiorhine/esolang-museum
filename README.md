@@ -55,6 +55,8 @@ C. Repetition (overlaps with 5, above).
 
 `by color or aid of` -- Convert int to equivalent ASCII value (outputs a single-character string)
 
+`forcibly` -- reverse string (reverses the string at the top of the stack in place.)
+
 `upon conviction` -- Blank the current stack position (assigns the value _null_)
 
 `Class A` -- Read the value under the pointer
