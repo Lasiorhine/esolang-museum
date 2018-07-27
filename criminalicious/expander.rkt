@@ -29,19 +29,13 @@
 (define vec-length-const 10)
 
 ;; PROGRAM MACRO
-#|
-(define-macro (crim-program PROGRAM-ARG ...)
-  #'(let ([first-stack-ptrs-l (list (make-vector vec-length-const null) 0 0)])
-      (fold-funcs first-stack-ptrs-l (list PROGRAM-ARG ...))))
-(provide crim-program)
-|#
 
 
 (define-macro (crim-program PROGRAM-ARG ...)
   #'(begin
       (define first-stack-ptrs-l (list (make-vector vec-length-const null) 0 0))
-      (fold-funcs first-stack-ptrs-l (list PROGRAM-ARG ...))))
-;      (void (fold-funcs first-stack-ptrs-l (list PROGRAM-ARG ...)))))
+;      (fold-funcs first-stack-ptrs-l (list PROGRAM-ARG ...))))
+      (void (fold-funcs first-stack-ptrs-l (list PROGRAM-ARG ...)))))
 (provide crim-program)
 
 
